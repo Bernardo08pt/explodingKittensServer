@@ -1,11 +1,12 @@
-import app = require('express');
+import express = require('express');
 require('typescript-require');
-const http = require('http').Server(app);
-const io = require('socket.io')(http);
 import socketModule from './socket/socket';
+const app = express();
+const server = require('http').createServer(app);
+const io = require('socket.io').listen(server);
 
 socketModule.init(io);
 
-http.listen(process.env.PORT || 4000, () => {
+server.listen(process.env.PORT || 4000, () => {
   console.log('Listening' + process.env.PORT || 4000);
 });
