@@ -67,6 +67,14 @@ var socketModule = {
                 var allRooms = Object.keys(rooms).map(function (key) { return rooms[key]; });
                 client.emit('getRoomsResponse', allRooms);
             });
+            client.on('leaveRoom', function (roomId) {
+                var username = sockets[client.id].username;
+                rooms[roomId].players = rooms[roomId].players.filter(function (player) { return player !== username; });
+                console.log("asdasd");
+                client.emit('leaveRoomResponse');
+                client.leave(roomId);
+                client.to(roomId).broadcast.emit('playerLeft', username);
+            });
         });
     }
 };

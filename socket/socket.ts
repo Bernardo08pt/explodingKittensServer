@@ -88,6 +88,16 @@ const socketModule: SocketModule = {
 
                 client.emit('getRoomsResponse', allRooms);
             });
+
+            client.on('leaveRoom', (roomId: string) => {
+                const { username } = sockets[client.id];
+
+                rooms[roomId].players = rooms[roomId].players.filter(player => player !== username);
+                
+                client.emit('leaveRoomResponse');
+                client.leave(roomId);
+                client.to(roomId).broadcast.emit('playerLeft', username);
+            });
         })
     }
 }
