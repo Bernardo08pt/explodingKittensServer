@@ -7,6 +7,12 @@ const io = require('socket.io').listen(server);
 
 socketModule.init(io);
 
-server.listen(process.env.PORT || 4000, () => {
-  console.log('Listening' + process.env.PORT || 4000);
+app.get('/', function (req, res) {
+  res.send('hello world')
+})
+
+const port = process.env.PORT ?? "4000"
+
+server.listen(port, () => {
+  console.log('Listening on ' + port);
 });
