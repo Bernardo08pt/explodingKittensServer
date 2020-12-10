@@ -6,6 +6,6 @@ import socketModule from './socket/socket';
 
 socketModule.init(io);
 
-http.listen(4000, () => {
-  console.log('Listening: http://localhost:4000');
+http.listen(process.env.PORT || 4000, () => {
+  console.log('Listening');
 });

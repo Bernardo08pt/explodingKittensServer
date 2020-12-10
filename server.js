@@ -9,6 +9,6 @@ var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var socket_1 = __importDefault(require("./socket/socket"));
 socket_1.default.init(io);
-http.listen(4000, function () {
-    console.log('Listening: http://localhost:4000');
+http.listen(process.env.PORT || 4000, function () {
+    console.log('Listening');
 });
