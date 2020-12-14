@@ -10,8 +10,11 @@ export interface User {
 export interface Room {
     id: string;
     number: number;
+    maxPlayers: number;
     players: Array<string>;
     owner: string;
+    hasGameStarted: boolean;
+    game: GameState | null
 }
 
 export interface SocketsConnected {

@@ -1,4 +1,5 @@
 import { Socket } from 'socket.io';
+import GameModule from '../game/game';
 import { RoomsCreated, SocketModule, SocketsConnected, User } from './types';
 
 const uuidv4 = () => 
@@ -35,11 +36,11 @@ const socketModule: SocketModule = {
 
                     if (roomId) {
                         client.join(roomId);
-                        room = rooms[roomId];
+                        room = {...rooms[roomId], game: GameModule.sanitizeGameState(rooms[roomId].game)};
                     }
                 } 
 
-                client.emit("checkIfLoggedInResult", { loggedIn: !!registeredSocket, room  });
+                client.emit("checkIfLoggedInResult", { loggedIn: !!registeredSocket, room});
             });
 
             client.on('register', (data: User) => {
@@ -64,27 +65,37 @@ const socketModule: SocketModule = {
                 rooms[id] = {
                     id,
                     number: ++Object.keys(rooms).length,
+                    maxPlayers: 4,
                     players: [username],
-                    owner: username
+                    owner: username,
+                    hasGameStarted: false,
+                    game: null
                 }
                 
                 client.join(id);
                 client.emit('enterRoomResponse', rooms[id]);
                 client.broadcast.emit('newRoomCreated', rooms[id]);
+                client.emit('getRoomsResponse', rooms);
             });
 
             client.on('enterRoom', (roomId: string) => {
-                const { username } = sockets[client.id];
+                const room = rooms[roomId];
 
-                rooms[roomId].players.push(username);
+                if (room.players.length < room.maxPlayers && !room.hasGameStarted) {
+                    const { username } = sockets[client.id];
+                    room.players.push(username);
                 
-                client.join(roomId);
-                client.emit('enterRoomResponse', rooms[roomId]);
-                client.to(roomId).broadcast.emit('newPlayerJoined', username);
+                    client.join(roomId);
+                    client.emit('enterRoomResponse', room);
+                    client.to(roomId).broadcast.emit('newPlayerJoined', username);
+                    client.broadcast.emit('getRoomsResponse', Object.keys(rooms).map(key => ({...rooms[key], game: null})));
+                } else {
+                    client.emit('enterRoomResponse', null);
+                }
             });
 
             client.on('getRooms', () => {
-                const allRooms = Object.keys(rooms).map(key => rooms[key]);
+                const allRooms = Object.keys(rooms).map(key => ({...rooms[key], game: null}));
 
                 client.emit('getRoomsResponse', allRooms);
             });
@@ -93,10 +104,22 @@ const socketModule: SocketModule = {
                 const { username } = sockets[client.id];
 
                 rooms[roomId].players = rooms[roomId].players.filter(player => player !== username);
-                
+
                 client.emit('leaveRoomResponse');
                 client.leave(roomId);
                 client.to(roomId).broadcast.emit('playerLeft', username);
+                client.broadcast.emit('getRoomsResponse', Object.keys(rooms).map(key => ({...rooms[key], game: null})));
+            });
+
+            client.on('startGame', (roomId: string) => {
+                const { username } = sockets[client.id];
+                const room = rooms[roomId];
+
+                if (room.owner === username && room.players.length > 1) {
+                    room.hasGameStarted = true;
+                    room.game = GameModule.init(room.players);
+                    io.in(roomId).emit("startGameResponse", GameModule.sanitizeGameState(room.game))    
+                }
             });
         })
     }
