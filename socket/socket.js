@@ -110,6 +110,27 @@ var socketModule = {
                     io.in(roomId).emit("startGameResponse", game_1.default.sanitizeGameState(room.game));
                 }
             });
+            client.on('getCards', function (roomId) {
+                var _a, _b;
+                var username = sockets[client.id].username;
+                var room = rooms[roomId];
+                client.emit("getCardsResponse", (_b = (_a = room.game) === null || _a === void 0 ? void 0 : _a.players.find(function (player) { return player.username === username; })) === null || _b === void 0 ? void 0 : _b.cards);
+            });
+            client.on('drawCard', function (roomId) {
+                var username = sockets[client.id].username;
+                var room = rooms[roomId];
+                console.log("hey");
+                if (!room.game) {
+                    return;
+                }
+                var newGameState = game_1.default.drawCard(room.game, username);
+                console.log(newGameState);
+                if (!!newGameState) {
+                    console.log("asdasdasdasdasdasd");
+                    room.game = newGameState;
+                    io.in(roomId).emit("updateGameState", game_1.default.sanitizeGameState(newGameState));
+                }
+            });
         });
     }
 };

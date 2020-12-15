@@ -1,6 +1,33 @@
+type CardType = 
+    "defuse"
+    | "explosive"
+    | "seeTheFuture"
+    | "shuffle"
+    | "favor"
+    | "nope"
+    | "skip"
+    | "attack"
+    | "tacoCat"
+    | "catermelon"
+    | "hairyPotatoCat"
+    | "beardCat"
+    | "rainbowCat"
+
+
 interface Card {
     name: string;
-    effect: string;
+    type: CardType;
+}
+
+type CardQuantity = {
+    card: Card;
+    number: number;
+}
+
+interface GameParameters {
+    numberExplosives: number;
+    numberDefuses: number;
+    cards: Array<CardQuantity>;
 }
 
 interface Player {

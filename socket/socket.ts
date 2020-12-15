@@ -118,7 +118,30 @@ const socketModule: SocketModule = {
                 if (room.owner === username && room.players.length > 1) {
                     room.hasGameStarted = true;
                     room.game = GameModule.init(room.players);
-                    io.in(roomId).emit("startGameResponse", GameModule.sanitizeGameState(room.game))    
+
+                    io.in(roomId).emit("startGameResponse", GameModule.sanitizeGameState(room.game));   
+                }
+            });
+
+            client.on('getCards', (roomId: string) => {
+                const { username } = sockets[client.id];
+                const room = rooms[roomId];
+               
+                client.emit("getCardsResponse", room.game?.players.find(player => player.username === username)?.cards);
+            });
+
+            client.on('drawCard', (roomId: string) => {
+                const { username } = sockets[client.id];
+                const room = rooms[roomId];
+
+                if (!room.game) {
+                    return;
+                }
+
+                const newGameState = GameModule.drawCard(room.game, username);
+                if (!!newGameState) {
+                    room.game = newGameState;
+                    io.in(roomId).emit("updateGameState", GameModule.sanitizeGameState(newGameState));
                 }
             });
         })
