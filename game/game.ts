@@ -199,6 +199,26 @@ const game = {
             : gameState.players[currentPlayerIndex+1].username;
 
         return gameState;
+    },
+    playCard: (gameState: GameState, username: string, card: Card): GameState | null => {
+        if (gameState.playerTurn !== username) {
+            return null;
+        }
+        
+        const currentPlayerIndex = gameState.players.findIndex(player => player.username === username);
+        if (currentPlayerIndex < 0) {
+            return null
+        }
+
+        const cardIndex = gameState.players[currentPlayerIndex].cards.findIndex(c => c.type === card.type);
+        if (cardIndex < 0) {
+            return null;
+        }
+
+        gameState.players[currentPlayerIndex].cards = gameState.players[currentPlayerIndex].cards.filter((c, index) => index !== cardIndex);
+        gameState.discardPile.push(card);
+
+        return gameState;
     }
 }
 

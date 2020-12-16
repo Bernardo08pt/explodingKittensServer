@@ -172,12 +172,9 @@ var game = {
         return __assign(__assign({}, gameState), { cardsRemaining: gameState.cardsRemaining.length, players: gameState.players.map(function (player) { return (__assign(__assign({}, player), { cards: player.cards.length })); }) });
     },
     drawCard: function (gameState, username) {
-        console.log(gameState.playerTurn);
-        console.log(username);
         if (gameState.playerTurn !== username) {
             return null;
         }
-        console.log(gameState.cardsRemaining);
         var card = gameState.cardsRemaining.pop();
         if (card === undefined) {
             return null;
@@ -190,6 +187,22 @@ var game = {
         gameState.playerTurn = currentPlayerIndex + 1 > gameState.players.length - 1
             ? gameState.players[0].username
             : gameState.players[currentPlayerIndex + 1].username;
+        return gameState;
+    },
+    playCard: function (gameState, username, card) {
+        if (gameState.playerTurn !== username) {
+            return null;
+        }
+        var currentPlayerIndex = gameState.players.findIndex(function (player) { return player.username === username; });
+        if (currentPlayerIndex < 0) {
+            return null;
+        }
+        var cardIndex = gameState.players[currentPlayerIndex].cards.findIndex(function (c) { return c.type === card.type; });
+        if (cardIndex < 0) {
+            return null;
+        }
+        gameState.players[currentPlayerIndex].cards = gameState.players[currentPlayerIndex].cards.filter(function (c, index) { return index !== cardIndex; });
+        gameState.discardPile.push(card);
         return gameState;
     }
 };

@@ -144,6 +144,22 @@ const socketModule: SocketModule = {
                     io.in(roomId).emit("updateGameState", GameModule.sanitizeGameState(newGameState));
                 }
             });
+
+            client.on('playCard', (data: any) => {
+                const { roomId, card} = data;
+                const { username } = sockets[client.id];
+                const room = rooms[roomId];
+
+                if (!room.game) {
+                    return;
+                }
+
+                const newGameState = GameModule.playCard(room.game, username, card);
+                if (!!newGameState) {
+                    room.game = newGameState;
+                    io.in(roomId).emit("updateGameState", GameModule.sanitizeGameState(newGameState));
+                }
+            });
         })
     }
 }

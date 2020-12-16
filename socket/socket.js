@@ -119,14 +119,24 @@ var socketModule = {
             client.on('drawCard', function (roomId) {
                 var username = sockets[client.id].username;
                 var room = rooms[roomId];
-                console.log("hey");
                 if (!room.game) {
                     return;
                 }
                 var newGameState = game_1.default.drawCard(room.game, username);
-                console.log(newGameState);
                 if (!!newGameState) {
-                    console.log("asdasdasdasdasdasd");
+                    room.game = newGameState;
+                    io.in(roomId).emit("updateGameState", game_1.default.sanitizeGameState(newGameState));
+                }
+            });
+            client.on('playCard', function (data) {
+                var roomId = data.roomId, card = data.card;
+                var username = sockets[client.id].username;
+                var room = rooms[roomId];
+                if (!room.game) {
+                    return;
+                }
+                var newGameState = game_1.default.playCard(room.game, username, card);
+                if (!!newGameState) {
                     room.game = newGameState;
                     io.in(roomId).emit("updateGameState", game_1.default.sanitizeGameState(newGameState));
                 }
