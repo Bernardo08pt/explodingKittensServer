@@ -113,13 +113,25 @@ const shuffleArray = (array: Array<any>) => {
     }
 }
 
+const advanceToNextPlayer = (gameState: GameState) => {
+    const { players, playerTurn } = gameState;
+    const nextPlayerPosition = players.findIndex(p => p.username === playerTurn) + 1;
+    const lastPlayerPosition = players.length - 1;
+
+    gameState.playerTurn = nextPlayerPosition > lastPlayerPosition 
+        ? players[0].username 
+        : players[nextPlayerPosition].username;
+
+    return gameState;
+}
+
 const game = {
     init: (players: Array<string>): GameState => {
         const deck: Array<Card> = [];  
         
         basicGame.cards.forEach(cardQuantity => {
             for(let i = 0; i < cardQuantity.number; i++) {
-                deck.push({...cardQuantity.card});
+                deck.push({...cardQuantity.card, id: deck.length + 1});
             }
         })
 
@@ -151,11 +163,11 @@ const game = {
             : 2; 
 
         for(let i = 0; i < numberDefusesInGame; i++) {
-            deck.push({...allCards["defuse"]});
+            deck.push({...allCards["defuse"], id: deck.length + 1});
         }
 
         for(let i = 0; i < players.length - 1; i++) {
-            deck.push({...allCards["explosive"]});
+            deck.push({...allCards["explosive"], id: deck.length + 1});
         }
 
         shuffleArray(deck);
@@ -182,42 +194,47 @@ const game = {
         if (gameState.playerTurn !== username) {
             return null;
         }
+
+        const player = gameState.players.find(p => p.username === username);
+        if (!player) {
+            return null;
+        }
         
         const card = gameState.cardsRemaining.pop();
         if (card === undefined) {
             return null;
         }
 
-        const currentPlayerIndex = gameState.players.findIndex(player => player.username === username);
-        if (currentPlayerIndex < 0) {
-            return null
-        }
+        player.cards.push(card);
 
-        gameState.players[currentPlayerIndex].cards.push(card); 
-        gameState.playerTurn = currentPlayerIndex + 1 > gameState.players.length - 1
-            ? gameState.players[0].username 
-            : gameState.players[currentPlayerIndex+1].username;
-
-        return gameState;
+        return advanceToNextPlayer(gameState);
     },
     playCard: (gameState: GameState, username: string, card: Card): GameState | null => {
         if (gameState.playerTurn !== username) {
             return null;
         }
         
-        const currentPlayerIndex = gameState.players.findIndex(player => player.username === username);
-        if (currentPlayerIndex < 0) {
-            return null
+        const player = gameState.players.find(p => p.username === username);
+        if (!player) {
+            return null;
         }
-
-        const cardIndex = gameState.players[currentPlayerIndex].cards.findIndex(c => c.type === card.type);
-        if (cardIndex < 0) {
+       
+        const cardInHand = player.cards.find(c => c.id === card.id && c.type === card.type);
+        if (!cardInHand) {
             return null;
         }
 
-        gameState.players[currentPlayerIndex].cards = gameState.players[currentPlayerIndex].cards.filter((c, index) => index !== cardIndex);
-        gameState.discardPile.push(card);
+        player.cards = player.cards.filter(c => c.id !== cardInHand.id);
+        gameState.discardPile.push(cardInHand);
 
+        switch (cardInHand.type) {
+            case "shuffle": 
+                shuffleArray(gameState.cardsRemaining);
+                break;
+            case "skip": 
+                return advanceToNextPlayer(gameState);
+        }
+        
         return gameState;
     }
 }

@@ -15,6 +15,7 @@ type CardType =
 
 
 interface Card {
+    id?: number;
     name: string;
     type: CardType;
 }

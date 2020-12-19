@@ -123,12 +123,21 @@ var shuffleArray = function (array) {
         _a = [array[j], array[i]], array[i] = _a[0], array[j] = _a[1];
     }
 };
+var advanceToNextPlayer = function (gameState) {
+    var players = gameState.players, playerTurn = gameState.playerTurn;
+    var nextPlayerPosition = players.findIndex(function (p) { return p.username === playerTurn; }) + 1;
+    var lastPlayerPosition = players.length - 1;
+    gameState.playerTurn = nextPlayerPosition > lastPlayerPosition
+        ? players[0].username
+        : players[nextPlayerPosition].username;
+    return gameState;
+};
 var game = {
     init: function (players) {
         var deck = [];
         basicGame.cards.forEach(function (cardQuantity) {
             for (var i = 0; i < cardQuantity.number; i++) {
-                deck.push(__assign({}, cardQuantity.card));
+                deck.push(__assign(__assign({}, cardQuantity.card), { id: deck.length + 1 }));
             }
         });
         shuffleArray(deck);
@@ -152,10 +161,10 @@ var game = {
             ? basicGame.numberDefuses - players.length
             : 2;
         for (var i = 0; i < numberDefusesInGame; i++) {
-            deck.push(__assign({}, allCards["defuse"]));
+            deck.push(__assign(__assign({}, allCards["defuse"]), { id: deck.length + 1 }));
         }
         for (var i = 0; i < players.length - 1; i++) {
-            deck.push(__assign({}, allCards["explosive"]));
+            deck.push(__assign(__assign({}, allCards["explosive"]), { id: deck.length + 1 }));
         }
         shuffleArray(deck);
         return {
@@ -175,34 +184,38 @@ var game = {
         if (gameState.playerTurn !== username) {
             return null;
         }
+        var player = gameState.players.find(function (p) { return p.username === username; });
+        if (!player) {
+            return null;
+        }
         var card = gameState.cardsRemaining.pop();
         if (card === undefined) {
             return null;
         }
-        var currentPlayerIndex = gameState.players.findIndex(function (player) { return player.username === username; });
-        if (currentPlayerIndex < 0) {
-            return null;
-        }
-        gameState.players[currentPlayerIndex].cards.push(card);
-        gameState.playerTurn = currentPlayerIndex + 1 > gameState.players.length - 1
-            ? gameState.players[0].username
-            : gameState.players[currentPlayerIndex + 1].username;
-        return gameState;
+        player.cards.push(card);
+        return advanceToNextPlayer(gameState);
     },
     playCard: function (gameState, username, card) {
         if (gameState.playerTurn !== username) {
             return null;
         }
-        var currentPlayerIndex = gameState.players.findIndex(function (player) { return player.username === username; });
-        if (currentPlayerIndex < 0) {
+        var player = gameState.players.find(function (p) { return p.username === username; });
+        if (!player) {
             return null;
         }
-        var cardIndex = gameState.players[currentPlayerIndex].cards.findIndex(function (c) { return c.type === card.type; });
-        if (cardIndex < 0) {
+        var cardInHand = player.cards.find(function (c) { return c.id === card.id && c.type === card.type; });
+        if (!cardInHand) {
             return null;
         }
-        gameState.players[currentPlayerIndex].cards = gameState.players[currentPlayerIndex].cards.filter(function (c, index) { return index !== cardIndex; });
-        gameState.discardPile.push(card);
+        player.cards = player.cards.filter(function (c) { return c.id !== cardInHand.id; });
+        gameState.discardPile.push(cardInHand);
+        switch (cardInHand.type) {
+            case "shuffle":
+                shuffleArray(gameState.cardsRemaining);
+                break;
+            case "skip":
+                return advanceToNextPlayer(gameState);
+        }
         return gameState;
     }
 };
