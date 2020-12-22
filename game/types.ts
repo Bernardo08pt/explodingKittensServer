@@ -42,6 +42,7 @@ interface GameState {
     discardPile: Array<Card>;
     players: Array<Player>;
     playerTurn: string;
+    numberOfTurns: number;
 }
 
 interface SanitizedGameState {
@@ -49,6 +50,7 @@ interface SanitizedGameState {
     discardPile: Array<Card>;
     players: Array<SanitizedPlayer>;
     playerTurn: string;
+    numberOfTurns: number;
 }
 
 interface SanitizedPlayer {

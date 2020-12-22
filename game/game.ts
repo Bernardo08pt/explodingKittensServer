@@ -176,7 +176,8 @@ const game = {
             cardsRemaining: deck,
             discardPile: [],
             playerTurn: gamePlayers[0].username,
-            players: gamePlayers
+            players: gamePlayers,
+            numberOfTurns: 1
         }
     },
     sanitizeGameState: (gameState: GameState | null): SanitizedGameState | null => {
@@ -207,7 +208,13 @@ const game = {
 
         player.cards.push(card);
 
-        return advanceToNextPlayer(gameState);
+        if (gameState.numberOfTurns === 1) {
+            return advanceToNextPlayer(gameState);
+        }
+
+        gameState.numberOfTurns--;
+
+        return gameState;
     },
     playCard: (gameState: GameState, username: string, card: Card): GameState | null => {
         if (gameState.playerTurn !== username) {
@@ -232,6 +239,9 @@ const game = {
                 shuffleArray(gameState.cardsRemaining);
                 break;
             case "skip": 
+                return advanceToNextPlayer(gameState);
+            case "attack": 
+                gameState.numberOfTurns++;
                 return advanceToNextPlayer(gameState);
         }
         
