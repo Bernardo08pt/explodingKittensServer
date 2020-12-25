@@ -145,7 +145,7 @@ const socketModule: SocketModule = {
                 }
             });
 
-            client.on('playCard', (data: any) => {
+            client.on('playCard', (data: {roomId: string, card: Card}) => {
                 const { roomId, card} = data;
                 const { username } = sockets[client.id];
                 const room = rooms[roomId];
@@ -158,6 +158,10 @@ const socketModule: SocketModule = {
                 if (!!newGameState) {
                     room.game = newGameState;
                     io.in(roomId).emit("updateGameState", GameModule.sanitizeGameState(newGameState));
+
+                    if (card.type === "seeTheFuture") {
+                        client.emit("sawTheFuture", GameModule.seeTheFuture(newGameState));
+                    }
                 }
             });
         })

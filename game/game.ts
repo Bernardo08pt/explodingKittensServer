@@ -246,6 +246,19 @@ const game = {
         }
         
         return gameState;
+    },
+    seeTheFuture: (gameState: GameState) => {
+        const { cardsRemaining } = gameState;
+        let cards: Array<Card> = [];
+
+
+        for (let i = cardsRemaining.length; i > cardsRemaining.length - 3; i--) {
+            if (cardsRemaining[i-1]) {
+                cards.push(cardsRemaining[i-1]);
+            }
+        }
+
+        return cards;
     }
 }
 

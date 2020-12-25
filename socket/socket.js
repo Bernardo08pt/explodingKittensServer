@@ -139,6 +139,9 @@ var socketModule = {
                 if (!!newGameState) {
                     room.game = newGameState;
                     io.in(roomId).emit("updateGameState", game_1.default.sanitizeGameState(newGameState));
+                    if (card.type === "seeTheFuture") {
+                        client.emit("sawTheFuture", game_1.default.seeTheFuture(newGameState));
+                    }
                 }
             });
         });

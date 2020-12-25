@@ -171,7 +171,8 @@ var game = {
             cardsRemaining: deck,
             discardPile: [],
             playerTurn: gamePlayers[0].username,
-            players: gamePlayers
+            players: gamePlayers,
+            numberOfTurns: 1
         };
     },
     sanitizeGameState: function (gameState) {
@@ -193,7 +194,11 @@ var game = {
             return null;
         }
         player.cards.push(card);
-        return advanceToNextPlayer(gameState);
+        if (gameState.numberOfTurns === 1) {
+            return advanceToNextPlayer(gameState);
+        }
+        gameState.numberOfTurns--;
+        return gameState;
     },
     playCard: function (gameState, username, card) {
         if (gameState.playerTurn !== username) {
@@ -215,8 +220,21 @@ var game = {
                 break;
             case "skip":
                 return advanceToNextPlayer(gameState);
+            case "attack":
+                gameState.numberOfTurns++;
+                return advanceToNextPlayer(gameState);
         }
         return gameState;
+    },
+    seeTheFuture: function (gameState) {
+        var cardsRemaining = gameState.cardsRemaining;
+        var cards = [];
+        for (var i = cardsRemaining.length; i > cardsRemaining.length - 3; i--) {
+            if (cardsRemaining[i - 1]) {
+                cards.push(cardsRemaining[i - 1]);
+            }
+        }
+        return cards;
     }
 };
 exports.default = game;
